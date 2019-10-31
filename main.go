@@ -17,6 +17,7 @@ var my_user = flag.String("my_user", "", "MySQL user")
 var my_pass = flag.String("my_pass", "", "MySQL password")
 var server_id = flag.Int("server_id", 0, "MySQL server id, as a pseudo slave")
 var ding_webhook_url = flag.String("ding_webhook_url", "", "dingding webhook config")
+var env = flag.String("env", "", "env config")
 var flavor = flag.String("flavor", "", "flavor: mysql or mariadb")
 var execution = flag.String("exec", "", "mysqldump execution path")
 var logLevel = flag.String("log_level", "info", "log level")
@@ -68,6 +69,10 @@ func main() {
 
 	if len(*ding_webhook_url) > 0 {
 		cfg.DingWebhookUrl = *ding_webhook_url
+	}
+
+	if len(*env) > 0 {
+		cfg.Env = *env
 	}
 
 	r, err := river.NewRiver(cfg)

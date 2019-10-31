@@ -22,8 +22,6 @@ var ErrRuleNotExist = errors.New("rule is not exist")
 type River struct {
 	c *Config
 
-	DingWebhookUrl string
-
 	canal *canal.Canal
 
 	rules map[string]*Rule

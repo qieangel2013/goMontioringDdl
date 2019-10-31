@@ -64,10 +64,10 @@ func (h *eventHandler) OnTableChanged(schema, table string) error {
 	return nil
 }
 
-func dingToInfo(s string, db string, table string, webhook_url string) bool {
+func dingToInfo(s string, db string, table string, webhook_url string, env string) bool {
 	if s != "" {
-		formt := `### DDL监控报警 \n  ### 环境: TEST \n ### 数据库:  %s \n  ### 表名: %s \n  ### DDL操作: %s`
-		text := fmt.Sprintf(formt, db, table, s)
+		formt := `### DDL监控报警 \n  开发环境: %s \n\n 数据库:  %s \n\n  **表名**: %s \n\n  **DDL操作**: \n\n <font color=#FF0000 size=6>%s</font> \n`
+		text := fmt.Sprintf(formt, env, db, table, s)
 		content := `{"msgtype": "markdown",
 					"markdown": {
             			"title":"DDL监控",
@@ -98,7 +98,7 @@ func (h *eventHandler) OnDDL(nextPos mysql.Position, query *replication.QueryEve
 		if len(nodes) == 0 {
 			continue
 		}
-		dingToInfo(st.Text(), string(query.Schema), nodes[0].table, h.r.c.DingWebhookUrl)
+		dingToInfo(st.Text(), string(query.Schema), nodes[0].table, h.r.c.DingWebhookUrl, h.r.c.Env)
 	}
 	h.r.syncCh <- posSaver{nextPos, true}
 	return h.r.ctx.Err()
@@ -110,6 +110,9 @@ func (h *eventHandler) OnXID(nextPos mysql.Position) error {
 }
 
 func (h *eventHandler) OnRow(e *canal.RowsEvent) error {
+	if e.Table == nil {
+		return nil
+	}
 	rule, ok := h.r.rules[ruleKey(e.Table.Schema, e.Table.Name)]
 	if !ok {
 		return nil
@@ -129,8 +132,8 @@ func (h *eventHandler) OnRow(e *canal.RowsEvent) error {
 	}
 
 	if err != nil {
-		h.r.cancel()
-		return errors.Errorf("make %s ES request err %v, close sync", e.Action, err)
+		// h.r.cancel()
+		log.Errorf("make %s ES request err %v, close sync", e.Action, err)
 	}
 
 	h.r.syncCh <- reqs
@@ -198,8 +201,8 @@ func (r *River) syncLoop() {
 			// TODO: retry some times?
 			if err := r.doBulk(reqs); err != nil {
 				log.Errorf("do ES bulk err %v, close sync", err)
-				r.cancel()
-				return
+				// r.cancel()
+				// return
 			}
 			reqs = reqs[0:0]
 		}
@@ -207,8 +210,8 @@ func (r *River) syncLoop() {
 		if needSavePos {
 			if err := r.master.Save(pos); err != nil {
 				log.Errorf("save sync position %s err %v, close sync", pos, err)
-				r.cancel()
-				return
+				// r.cancel()
+				// return
 			}
 		}
 	}

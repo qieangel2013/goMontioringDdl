@@ -31,6 +31,7 @@ type Config struct {
 	Flavor         string `toml:"flavor"`
 	DataDir        string `toml:"data_dir"`
 	DingWebhookUrl string `toml:"ding_webhook_url"`
+	Env            string `toml:"env"`
 
 	DumpExec       string `toml:"mysqldump"`
 	SkipMasterData bool   `toml:"skip_master_data"`

@@ -37,7 +37,10 @@ flush_bulk_time = "200ms"
 skip_no_pk_table = true
 
 # dingding config
-ding_webhook_url = "https://oapi.dingtalk.com/robot/send?access_token=1234"
+ding_webhook_url = "https://oapi.dingtalk.com/robot/send?access_token=da1496a9af2fc96b7443af87037e64c1002a9d7a222abe7a8b345962a5ef9348"
+
+# env config
+env = "test"
 
 # MySQL data source
 [[source]]
@@ -46,6 +49,22 @@ schema = "v9"
 # Only below tables will be synced into Elasticsearch.
 # "t_[0-9]{4}" is a wildcard table format, you can use it if you have many sub tables, like table_0000 - table_1023
 # I don't think it is necessary to sync all tables in a database.
+tables = ["*"]
+
+[[source]]
+schema = "zhijia"
+tables = ["*"]
+
+[[source]]
+schema = "livegoim"
+tables = ["*"]
+
+[[source]]
+schema = "33hao"
+tables = ["*"]
+
+[[source]]
+schema = "ecshop"
 tables = ["*"]
 
 # Below is for special rule mapping
@@ -141,3 +160,5 @@ tables = ["*"]
 # The es doc's id will be `id`:`tag`
 # It is useful for merge muliple table into one type while theses tables have same PK 
 #id = ["id", "tag"]
+# dingding config
+dingding_webhook_url = "https://oapi.dingtalk.com/robot/send?access_token=9483ef80664fd92cd16f3c37c5c3b1e2ad17e244f04b7869bbfc34fe9b9c290a"
