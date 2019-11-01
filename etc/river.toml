@@ -51,18 +51,22 @@ schema = "v9"
 # I don't think it is necessary to sync all tables in a database.
 tables = ["*"]
 
+# MySQL data source
 [[source]]
 schema = "zhijia"
 tables = ["*"]
 
+# MySQL data source
 [[source]]
 schema = "livegoim"
 tables = ["*"]
 
+# MySQL data source
 [[source]]
 schema = "33hao"
 tables = ["*"]
 
+# MySQL data source
 [[source]]
 schema = "ecshop"
 tables = ["*"]
