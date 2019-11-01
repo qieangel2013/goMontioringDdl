@@ -34,10 +34,12 @@ source config.
 The format in config file is below:
 
 ```
+# MySQL data source
 [[source]]
 schema = "test"
 tables = ["*"]
 
+# MySQL data source
 [[source]]
 schema = "test_1"
 tables = ["*", t4]
