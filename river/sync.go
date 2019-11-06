@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/XiaoMi/soar/advisor"
+	"github.com/XiaoMi/soar/database"
 	"github.com/juju/errors"
 	"github.com/pingcap/parser"
 	"github.com/pingcap/parser/ast"
@@ -64,16 +66,85 @@ func (h *eventHandler) OnTableChanged(schema, table string) error {
 	return nil
 }
 
+func getSuggest(sql string) string {
+	var buf string
+	q, err := advisor.NewQuery4Audit(sql)
+	if err == nil {
+
+	}
+	heuristicSuggest := make(map[string]advisor.Rule) // 启发式建议
+	sql = database.RemoveSQLComments(sql)
+	for item, rule := range advisor.HeuristicRules {
+		// 去除忽略的建议检查
+		okFunc := (*advisor.Query4Audit).RuleOK
+		if !advisor.IsIgnoreRule(item) && &rule.Func != &okFunc {
+			r := rule.Func(q)
+			if r.Item == item {
+				heuristicSuggest[item] = r
+			}
+		}
+	}
+	// 合并重复的建议
+	suggest := make(map[string]advisor.Rule)
+
+	suggest = advisor.MergeConflictHeuristicRules(heuristicSuggest)
+
+	// 先保证suggest中有元素，然后再根据ignore配置删除不需要的项
+	if len(suggest) < 1 {
+		suggest = map[string]advisor.Rule{"OK": advisor.HeuristicRules["OK"]}
+	}
+
+	for item, rule := range suggest {
+		if item != "OK" {
+			buf = buf + " > " + rule.Summary + ": \n\n" + "<font color=#FF0000 size=6>" + rule.Content + "</font>\n\n"
+		}
+	}
+	return string(buf)
+}
+
 func dingToInfo(s string, db string, table string, webhook_url string, env string) bool {
 	if s != "" {
-		formt := `### DDL监控报警 \n  开发环境: %s \n\n 数据库:  %s \n\n  **表名**: %s \n\n  **DDL操作**: \n\n <font color=#FF0000 size=6>%s</font> \n`
-		text := fmt.Sprintf(formt, env, db, table, s)
-		content := `{"msgtype": "markdown",
+		s_Suggest := getSuggest(s)
+		s = strings.Replace(s, ",", ", \n\n > ", -1)
+		formt := ""
+		text := ""
+		if s_Suggest == "" {
+			formt = `### DDL监控报警 \n  开发环境: %s \n\n 数据库:  %s \n\n  **表名**: %s \n\n  **DDL操作**: \n\n > #### %s \n`
+			text = fmt.Sprintf(formt, env, db, table, s)
+		} else {
+			formt = `### DDL监控报警 \n  开发环境: %s \n\n 数据库:  %s \n\n  **表名**: %s \n\n  **DDL操作**: \n\n > #### %s \n\n #### **优化建议**: \n\n %s \n`
+			text = fmt.Sprintf(formt, env, db, table, s, s_Suggest)
+		}
+		content := ""
+		sTmp := strings.ToUpper(s)
+		if strings.Contains(sTmp, "CREATE TABLE") {
+			if strings.Contains(sTmp, "Like") {
+				content = `{"msgtype": "markdown",
 					"markdown": {
             			"title":"DDL监控",
             			"text": "` + text + `"
         			}
-		}`
+				}`
+			} else {
+				content = `{"msgtype": "markdown",
+					"markdown": {
+            			"title":"DDL监控",
+            			"text": "@所有人 \n\n ` + text + `"
+        			},
+        			"at": {
+       					 "isAtAll": true
+    				}
+				}`
+			}
+
+		} else {
+			content = `{"msgtype": "markdown",
+					"markdown": {
+            			"title":"DDL监控",
+            			"text": "` + text + `"
+        			}
+			}`
+		}
 		req, err := http.NewRequest("POST", webhook_url, strings.NewReader(content))
 		if err != nil {
 			// handle error

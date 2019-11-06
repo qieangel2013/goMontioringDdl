@@ -1,5 +1,11 @@
 goMontioringDdl 是go通过binlog实现对ddl监控发送钉钉消息
 
+### v1.0.1
+	1、添加对sql做优化建议
+	效果图:
+![](https://github.com/qieangel2013/goMontioringDdl/blob/master/1.jpg)
+![](https://github.com/qieangel2013/goMontioringDdl/blob/master/2.png)
+
 ## Install
 
 + Install Go (1.6+) and set your [GOPATH](https://golang.org/doc/code.html#GOPATH)
