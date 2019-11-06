@@ -118,7 +118,7 @@ func dingToInfo(s string, db string, table string, webhook_url string, env strin
 		content := ""
 		sTmp := strings.ToUpper(s)
 		if strings.Contains(sTmp, "CREATE TABLE") {
-			if strings.Contains(sTmp, "Like") {
+			if strings.Contains(sTmp, "LIKE") {
 				content = `{"msgtype": "markdown",
 					"markdown": {
             			"title":"DDL监控",
